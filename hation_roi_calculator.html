@@ -50,55 +50,11 @@
     .payback-note { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
     .divider { border: none; border-top: 0.5px solid var(--border); margin: 2rem 0; }
     .hation-price-note { font-size: 13px; color: var(--text-muted); }
-    .cta-row { margin-top: 2rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
     input[type="range"] {
       width: 100%;
       accent-color: var(--fill-accent);
       cursor: pointer;
-    }
-
-    button {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: var(--surface-1);
-      color: var(--text-primary);
-      font-size: 14px;
-      font-weight: 500;
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    button:hover {
-      background: #f1f5f9;
-      border-color: #cbd5e1;
-    }
-
-    /* Simple toast for sendPrompt feedback */
-    #prompt-toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #0f172a;
-      color: #fff;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 13px;
-      max-width: 90%;
-      width: max-content;
-      max-width: 480px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      z-index: 1000;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-    }
-    #prompt-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
     }
   </style>
 </head>
@@ -178,18 +134,7 @@
 
     <hr class="divider">
     <p class="hation-price-note">Estimate assumes Hation at $299/mo. Your actual savings may be higher — staff time freed often unlocks capacity for higher-value tasks.</p>
-
-    <div class="cta-row">
-      <button type="button" id="btn-prospect">
-        Use this with a prospect ↗
-      </button>
-      <button type="button" id="btn-slide">
-        Turn into a slide ↗
-      </button>
-    </div>
   </div>
-
-  <div id="prompt-toast" role="status" aria-live="polite"></div>
 
   <script>
     function fmt(n) {
@@ -235,37 +180,6 @@
         document.getElementById('payback-note').textContent = 'At this volume, ROI develops over ~' + Math.round(paybackDays / 30) + ' months.';
       }
     }
-
-    // Stub for host environments that provide sendPrompt.
-    // Falls back to a toast + console so the page works standalone.
-    function sendPrompt(msg) {
-      if (typeof window.sendPromptHost === 'function') {
-        window.sendPromptHost(msg);
-        return;
-      }
-      console.log('[sendPrompt]', msg);
-      const toast = document.getElementById('prompt-toast');
-      toast.textContent = msg.length > 160 ? msg.slice(0, 157) + '…' : msg;
-      toast.classList.add('show');
-      clearTimeout(window._promptToastTimer);
-      window._promptToastTimer = setTimeout(function () {
-        toast.classList.remove('show');
-      }, 4200);
-    }
-
-    document.getElementById('btn-prospect').addEventListener('click', function () {
-      const emails = document.getElementById('emails').value;
-      const annual = document.getElementById('annual-save').textContent;
-      sendPrompt(
-        'I ran the ROI calculator. My volume is ' + emails +
-        ' emails/week and I\'m saving an estimated ' + annual +
-        ' annually. What\'s the best way to position this to a 3PL prospect?'
-      );
-    });
-
-    document.getElementById('btn-slide').addEventListener('click', function () {
-      sendPrompt('Help me turn these ROI numbers into a one-slide summary I can send to a prospect after a demo call.');
-    });
 
     calc();
   </script>
