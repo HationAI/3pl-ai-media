@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hation ROI Calculator — WISMO Automation Savings</title>
+  <style>
+    :root {
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --text-accent: #0f766e;
+      --surface-1: #f8fafc;
+      --bg-accent: #ccfbf1;
+      --border: #e2e8f0;
+      --fill-accent: #14b8a6;
+      --radius: 10px;
+      --bg-page: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 1.5rem;
+    }
+
+    .roi-wrap { padding: 2rem 0; max-width: 640px; margin: 0 auto; }
+    .roi-header { margin-bottom: 2rem; }
+    .roi-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .roi-val { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .roi-row { margin-bottom: 1.5rem; }
+    .roi-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 2rem 0; }
+    .roi-card { background: var(--surface-1); border-radius: var(--radius); padding: 1rem; }
+    .roi-card-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .roi-card-value { font-size: 22px; font-weight: 500; color: var(--text-primary); line-height: 1.2; }
+    .roi-card-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .roi-card.accent { background: var(--bg-accent); }
+    .roi-card.accent .roi-card-value { color: var(--text-accent); font-size: 28px; }
+    .roi-card.accent .roi-card-label { color: var(--text-accent); opacity: 0.75; }
+    .roi-card.accent .roi-card-sub { color: var(--text-accent); opacity: 0.75; }
+    .payback-bar-wrap { margin: 2rem 0 0; }
+    .payback-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .payback-bar-bg { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .payback-bar-fill { height: 6px; background: var(--fill-accent); border-radius: 99px; transition: width 0.3s ease; }
+    .payback-note { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 2rem 0; }
+    .hation-price-note { font-size: 13px; color: var(--text-muted); }
+    .cta-row { margin-top: 2rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--fill-accent);
+      cursor: pointer;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    /* Simple toast for sendPrompt feedback */
+    #prompt-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      max-width: 90%;
+      width: max-content;
+      max-width: 480px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+    #prompt-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <h2 class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Hation ROI Calculator — estimate your monthly savings from AI-automated WISMO email handling</h2>
+
+  <div class="roi-wrap">
+    <div class="roi-header">
+      <p style="font-size:13px; color:var(--text-muted); margin:0 0 4px;">Hation · WISMO automation</p>
+      <p style="font-size:18px; font-weight:500; color:var(--text-primary); margin:0;">How much is manual email handling costing you?</p>
+    </div>
+
+    <div class="roi-row">
+      <div class="roi-label">
+        <span>WISMO emails per week</span>
+        <span class="roi-val" id="emails-out">150</span>
+      </div>
+      <input type="range" min="10" max="1000" step="10" value="150" id="emails" oninput="calc()">
+    </div>
+
+    <div class="roi-row">
+      <div class="roi-label">
+        <span>Minutes to handle each email manually</span>
+        <span class="roi-val" id="mins-out">8 min</span>
+      </div>
+      <input type="range" min="2" max="30" step="1" value="8" id="mins" oninput="calc()">
+    </div>
+
+    <div class="roi-row">
+      <div class="roi-label">
+        <span>Staff cost per hour</span>
+        <span class="roi-val" id="rate-out">$20/hr</span>
+      </div>
+      <input type="range" min="12" max="75" step="1" value="20" id="rate" oninput="calc()">
+    </div>
+
+    <div class="roi-row">
+      <div class="roi-label">
+        <span>Automation rate (emails handled without staff)</span>
+        <span class="roi-val" id="auto-out">72%</span>
+      </div>
+      <input type="range" min="40" max="95" step="1" value="72" id="auto" oninput="calc()">
+    </div>
+
+    <hr class="divider">
+
+    <div class="roi-cards">
+      <div class="roi-card">
+        <div class="roi-card-label">Hours saved</div>
+        <div class="roi-card-value" id="hours-saved">—</div>
+        <div class="roi-card-sub">per month</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-card-label">Emails automated</div>
+        <div class="roi-card-value" id="emails-auto">—</div>
+        <div class="roi-card-sub">per month</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-card-label">Monthly savings</div>
+        <div class="roi-card-value" id="monthly-save">—</div>
+        <div class="roi-card-sub">per month</div>
+      </div>
+      <div class="roi-card accent">
+        <div class="roi-card-label">Annual savings</div>
+        <div class="roi-card-value" id="annual-save">—</div>
+        <div class="roi-card-sub">at your volume</div>
+      </div>
+    </div>
+
+    <div class="payback-bar-wrap">
+      <div class="payback-label">Payback period</div>
+      <div class="payback-bar-bg">
+        <div class="payback-bar-fill" id="payback-bar" style="width:0%"></div>
+      </div>
+      <div class="payback-note" id="payback-note">—</div>
+    </div>
+
+    <hr class="divider">
+    <p class="hation-price-note">Estimate assumes Hation at $299/mo. Your actual savings may be higher — staff time freed often unlocks capacity for higher-value tasks.</p>
+
+    <div class="cta-row">
+      <button type="button" id="btn-prospect">
+        Use this with a prospect ↗
+      </button>
+      <button type="button" id="btn-slide">
+        Turn into a slide ↗
+      </button>
+    </div>
+  </div>
+
+  <div id="prompt-toast" role="status" aria-live="polite"></div>
+
+  <script>
+    function fmt(n) {
+      return '$' + Math.round(n).toLocaleString();
+    }
+
+    function calc() {
+      const emails = parseInt(document.getElementById('emails').value, 10);
+      const mins = parseInt(document.getElementById('mins').value, 10);
+      const rate = parseInt(document.getElementById('rate').value, 10);
+      const autoRate = parseInt(document.getElementById('auto').value, 10) / 100;
+
+      document.getElementById('emails-out').textContent = emails.toLocaleString();
+      document.getElementById('mins-out').textContent = mins + ' min';
+      document.getElementById('rate-out').textContent = '$' + rate + '/hr';
+      document.getElementById('auto-out').textContent = Math.round(autoRate * 100) + '%';
+
+      const weeklyEmails = emails;
+      const monthlyEmails = Math.round(weeklyEmails * 4.33);
+      const automated = Math.round(monthlyEmails * autoRate);
+      const hoursSaved = Math.round((automated * mins) / 60);
+      const monthlySave = Math.round(hoursSaved * rate);
+      const annualSave = monthlySave * 12;
+
+      document.getElementById('emails-auto').textContent = automated.toLocaleString();
+      document.getElementById('hours-saved').textContent = hoursSaved.toLocaleString();
+      document.getElementById('monthly-save').textContent = fmt(monthlySave);
+      document.getElementById('annual-save').textContent = fmt(annualSave);
+
+      const hationCost = 299;
+      const paybackDays = monthlySave > 0 ? Math.round((hationCost / monthlySave) * 30) : 999;
+      const pct = Math.min(100, Math.round((paybackDays / 30) * 100));
+
+      document.getElementById('payback-bar').style.width = (100 - pct) + '%';
+
+      if (paybackDays <= 3) {
+        document.getElementById('payback-note').textContent = 'Pays for itself in ' + paybackDays + ' days — in the first week.';
+      } else if (paybackDays <= 14) {
+        document.getElementById('payback-note').textContent = 'Pays for itself in about ' + paybackDays + ' days.';
+      } else if (paybackDays <= 30) {
+        document.getElementById('payback-note').textContent = 'Pays for itself within the first month.';
+      } else {
+        document.getElementById('payback-note').textContent = 'At this volume, ROI develops over ~' + Math.round(paybackDays / 30) + ' months.';
+      }
+    }
+
+    // Stub for host environments that provide sendPrompt.
+    // Falls back to a toast + console so the page works standalone.
+    function sendPrompt(msg) {
+      if (typeof window.sendPromptHost === 'function') {
+        window.sendPromptHost(msg);
+        return;
+      }
+      console.log('[sendPrompt]', msg);
+      const toast = document.getElementById('prompt-toast');
+      toast.textContent = msg.length > 160 ? msg.slice(0, 157) + '…' : msg;
+      toast.classList.add('show');
+      clearTimeout(window._promptToastTimer);
+      window._promptToastTimer = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 4200);
+    }
+
+    document.getElementById('btn-prospect').addEventListener('click', function () {
+      const emails = document.getElementById('emails').value;
+      const annual = document.getElementById('annual-save').textContent;
+      sendPrompt(
+        'I ran the ROI calculator. My volume is ' + emails +
+        ' emails/week and I\'m saving an estimated ' + annual +
+        ' annually. What\'s the best way to position this to a 3PL prospect?'
+      );
+    });
+
+    document.getElementById('btn-slide').addEventListener('click', function () {
+      sendPrompt('Help me turn these ROI numbers into a one-slide summary I can send to a prospect after a demo call.');
+    });
+
+    calc();
+  </script>
+</body>
+</html>
